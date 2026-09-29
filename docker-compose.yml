@@ -1,0 +1,100 @@
+
+services:
+  db_fire_ai:
+    image: pgvector/pgvector:pg16
+    container_name: fire_ai_db
+    restart: always
+    environment:
+      POSTGRES_USER: ai_user
+      POSTGRES_PASSWORD: ChangeMe123!
+      POSTGRES_DB: fire_engine_db
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: fire_ai_api
+    restart: always
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8003 --timeout-keep-alive 1800 --reload
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=postgresql://ai_user:ChangeMe123!@db_fire_ai:5432/fire_engine_db  
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    depends_on:
+      - db_fire_ai
+    volumes:
+      - .:/app
+      - /root/fire-ai-engine/storage/drawings:/app/storage/drawings
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: fire_ai_frontend
+    restart: always
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+    environment:
+      - BACKEND_URL=http://api:8003/api/v1/extract/pdf-boq
+    # Added — unlike the `api` service above (which bind-mounts `.:/app`
+    # so uvicorn's --reload picks up code edits live), frontend previously
+    # had NO volume at all: Dockerfile.frontend's `COPY frontend/ /app/`
+    # only bakes a snapshot into the image at BUILD time, so every edit to
+    # frontend/app.py after that build was silently invisible to the
+    # running container no matter how many times it was restarted — the
+    # actual cause behind "I don't see any change in the frontend" here.
+    # This mount, combined with config.toml's new runOnSave=true, makes
+    # frontend/app.py edits show up on the next browser refresh with no
+    # rebuild needed, matching how `api` already behaves. A rebuild is
+    # still needed if requirements/Dockerfile.frontend itself changes
+    # (new dependency, etc.) — this only covers app.py-level edits.
+    #
+    # Second mount, added separately from the one above: Streamlit only
+    # ever reads theme/runOnSave/etc. settings from "$CWD/.streamlit/config.toml"
+    # at server STARTUP (CWD here is /app, per Dockerfile.frontend's WORKDIR)
+    # — never from an arbitrary file named config.toml sitting elsewhere.
+    # frontend/config.toml has always lived at /app/frontend/config.toml
+    # once mounted above, which Streamlit never looks at, so every
+    # [theme]/[server] setting in it — including the dark palette just
+    # added — has silently done NOTHING since this file was created; the
+    # dark-ish look you saw before was 100% the custom CSS injected in
+    # app.py forcing the page shell dark, while every native Streamlit
+    # widget (selectboxes, input labels, alerts, etc.) was still running
+    # Streamlit's actual default theme underneath — hence the washed-out
+    # label text and the white/light selectbox box in your screenshot.
+    # This binds the *same* file into the *one* path Streamlit actually
+    # reads, without moving/duplicating it in the repo.
+    volumes:
+      - ./frontend:/app/frontend
+      - ./frontend/config.toml:/app/.streamlit/config.toml:ro
+
+  # New React/Next.js frontend (see the "نبدأ Next.js من الصفر" decision) —
+  # runs alongside the old Streamlit `frontend` service on a different
+  # port so both can be reached during cutover; drop the `frontend`
+  # service above once this is confirmed working end to end in production.
+  frontend-next:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend-next
+      args:
+        # Browser-side fetches call the FastAPI service through whatever
+        # reverse proxy fronts this docker-compose stack in production
+        # (e.g. nginx routing /api/* to the api container) — same-origin
+        # relative path, no CORS involved. Override at build time with
+        # --build-arg NEXT_PUBLIC_API_URL=https://other-host/api/v1 if the
+        # API is ever served from a different domain/port than the site.
+        NEXT_PUBLIC_API_URL: /api/v1
+    container_name: fire_ai_frontend_next
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:

@@ -1,0 +1,37 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libgl1 \
+    libglx-mesa0 \
+    libglib2.0-0 \
+    libfontconfig1 \
+    libxrender1 \
+    libxi6 \
+    libxext6 \
+    libfreetype6 \
+    libxkbcommon0 \
+    xkb-data \
+    libxcb-util1 \
+    fuse \
+    libfuse2 \
+    libmupdf-dev \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# تثبيت streamlit وباقي المكتبات صراحة
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir streamlit requests pandas PyMuPDF ezdxf matplotlib plotly python-docx
+RUN curl -L -o /tmp/oda.deb "https://www.opendesign.com/guestfiles/get?filename=ODAFileConverter_QT6_lnxX64_8.3dll_27.1.deb" \
+    && dpkg -i /tmp/oda.deb || apt-get install -f -y \
+    && rm -rf /tmp/oda.deb
+#RUN pip install --no-cache-dir -r frontend/requirements.txt
+COPY frontend/ /app/
+
+COPY . .
+
+EXPOSE 8501
+
+CMD ["python", "-m", "streamlit", "run", "frontend/app.py", "--server.maxMessageSize=500", "--server.port=8501", "--server.address=0.0.0.0", "--server.enableCORS=false", "--server.enableXsrfProtection=false"]

@@ -1,0 +1,29 @@
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = false
+maxUploadSize = 200
+websocketPingTimeout = 300
+maxMessageSize = 500
+# Added alongside docker-compose.yml's new frontend volume mount — without
+# this, Streamlit still notices an edited app.py (file watching is on by
+# default) but only shows a small "Source file changed" banner asking you
+# to click Rerun; this makes it rerun automatically on save instead, so a
+# browser refresh alone is enough to see the change.
+runOnSave = true
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+# Dark SaaS palette (Linear/Vercel-style near-black neutrals with a single
+# accent) replacing the old stock-Streamlit dark theme. Ember orange instead
+# of a generic dashboard blue/red so it still reads as "fire/security"
+# rather than a template. Kept in sync with the CSS custom properties
+# (--bg-app / --accent / etc.) in frontend/app.py's injected <style> block —
+# change both together if this palette changes again.
+primaryColor = "#f97316"
+backgroundColor = "#0a0d14"
+secondaryBackgroundColor = "#11151f"
+textColor = "#eef1f7"
+base = "dark"

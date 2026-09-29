@@ -1,0 +1,37 @@
+# --- Web Framework & Server ---
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+
+# --- Database & Authentication ---
+sqlalchemy==2.0.30
+psycopg2-binary==2.9.9
+passlib[bcrypt]>=1.7.4
+python-jose[cryptography]>=3.3.0
+jose
+
+# --- CAD, PDF & Document Processing ---
+pymupdf==1.24.1
+ezdxf==1.3.0
+Pillow>=10.0.0
+# Used only to bake a page's /Rotate flag into its content stream before
+# sending native PDF pages to Claude/Gemini (transfer_rotation_to_content) —
+# see app/services/parser_service.py for why this matters.
+pypdf>=4.2.0
+
+# --- AI Clients & LLMs ---
+google-genai
+anthropic
+# 0.9.0 predates qwen3.6-27b and its reasoning_effort/reasoning_format
+# parameters entirely — bumped so the client is current with the API.
+groq>=1.6.0
+
+# --- Utilities & Data Parsing ---
+pydantic==2.7.4
+httpx==0.27.0
+requests>=2.31.0
+python-dotenv==1.0.1
+json-repair
+bcrypt==4.0.1
+# Excel export of the PTS scope table (app/services/project_spec_service.py)
+openpyxl>=3.1.2

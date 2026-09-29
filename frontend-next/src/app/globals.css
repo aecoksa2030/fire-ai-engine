@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------
+   AECO design tokens — ported 1:1 from the values already approved during
+   the Streamlit redesign (frontend/app.py's _PALETTES dict), so the new
+   Next.js frontend keeps the same "Dark SaaS" (Linear/Vercel-style) look
+   and orange accent instead of starting the visual design over. Unlike
+   the Streamlit version, these are REAL CSS custom properties consumed by
+   real DOM/CSS — no canvas-rendered widgets, no colors baked server-side
+   at process-start, no fighting a component library's own internal
+   theme. next-themes toggles the `.dark` class on <html>; every token
+   below has a light (":root") and dark (".dark") value.
+   --------------------------------------------------------------------- */
+:root {
+  --bg-app: #f4f5f7;
+  --bg-elevated: #ffffff;
+  --bg-elevated-2: #f1f2f5;
+  --bg-elevated-3: #e6e8ec;
+  --border: #dfe2e8;
+  --border-subtle: #e9ebef;
+  --text-primary: #181b23;
+  --text-secondary: #5b6270;
+  --text-muted: #868d9a;
+  --accent: #ea580c;
+  --accent-hover: #c2410c;
+  --accent-soft: rgba(234, 88, 12, 0.1);
+  --accent-text: #ffffff;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --info: #0284c7;
+  --shadow-card: 0 1px 2px rgba(20, 20, 30, 0.06), 0 8px 24px -16px rgba(20, 20, 30, 0.18);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+}
+
+.dark {
+  --bg-app: #0a0d14;
+  --bg-elevated: #11151f;
+  --bg-elevated-2: #171c29;
+  --bg-elevated-3: #1f2532;
+  --border: #242b3a;
+  --border-subtle: #1a2030;
+  --text-primary: #eef1f7;
+  --text-secondary: #9aa3b8;
+  --text-muted: #6b7387;
+  --accent: #f97316;
+  --accent-hover: #fb923c;
+  --accent-soft: rgba(249, 115, 22, 0.14);
+  --accent-text: #14100a;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #38bdf8;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px -14px rgba(0, 0, 0, 0.6);
+}
+
+@theme inline {
+  --color-bg-app: var(--bg-app);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-elevated-2: var(--bg-elevated-2);
+  --color-bg-elevated-3: var(--bg-elevated-3);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-text: var(--accent-text);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --font-sans: var(--font-app-sans);
+}
+
+/* No next/font/google here on purpose — fonts.googleapis.com is not on
+   this environment's egress allowlist (confirmed live: a build-time
+   fetch to it fails with a proxy/allowlist block), and a Docker build
+   should never depend on reaching an external font CDN anyway. A solid
+   native/system stack looks correct immediately, needs no network at
+   build OR run time, and is what most production dashboards (Linear,
+   Vercel, Notion) actually ship as their fallback stack regardless. */
+:root {
+  --font-app-sans: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+    "Noto Kufi Arabic", "Tajawal", sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-app-sans);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+* {
+  border-color: var(--border);
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--text-primary);
+}
+
+/* Thin, theme-aware scrollbar — a small SaaS-y touch carried over from
+   the Streamlit version's CSS. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
